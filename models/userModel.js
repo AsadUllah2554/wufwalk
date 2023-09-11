@@ -6,6 +6,17 @@ const bcrypt = require('bcrypt');
 const validator = require('validator');
 
 // Schema is a blueprint for the data that will be saved in the database
+
+const dogSchema = new Schema({
+    dogName: {
+        type: String,
+        required: false,
+    },
+    image: {
+        type: String, // You can change this to an appropriate data type for storing image URLs
+        required: false, // Make it required if you want to enforce image URLs for all dogs
+    },
+});
 const userSchema = new Schema({
      
     name:{
@@ -27,15 +38,13 @@ const userSchema = new Schema({
         type:String,
         required:true
     },
-    dogname:{
-        type:String,
-    },
+    dogs: [dogSchema],
    
 })
 
 // static signup Method
 
-userSchema.statics.signup = async function(email,password,username,name,dogname){
+userSchema.statics.signup = async function(email,password,username,name,dogs){
 
     // validation
     if(!email || !password){
@@ -60,7 +69,7 @@ userSchema.statics.signup = async function(email,password,username,name,dogname)
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(password,salt);
 
-    const user = await this.create({email,password:hashedPassword,username,name,dogname});
+    const user = await this.create({email,password:hashedPassword,username,name,dogs});
     return user;
 }
 
