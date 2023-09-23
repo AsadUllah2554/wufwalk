@@ -73,6 +73,28 @@ userSchema.statics.signup = async function(email,password,username,name,dogs){
     return user;
 }
 
+userSchema.statics.updatePassword = async function(email, newPassword) {
+    // Find the user by email
+    const user = await this.findOne({ email });
+  
+    if (!user) {
+      throw Error('User not found');
+    }
+  
+    // Generate a new salt
+    const salt = await bcrypt.genSalt(10);
+  
+    // Hash the new password with the new salt
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+  
+    // Update the user's password in the database
+    user.password = hashedPassword;
+  
+    await user.save(); // Save the updated user object
+  
+    return user;
+  };
+
 // static login Method
 
 userSchema.statics.login = async function(username,password){
@@ -93,8 +115,21 @@ userSchema.statics.login = async function(username,password){
     }
 
     return user;
+}
 
-   
+
+userSchema.statics.verifyUser = async function(email){
+    // validation
+    if(!email){
+        throw Error('Please provide email')
+    }
+
+    const user = await this.findOne({email});
+
+    if(!user){
+        throw Error('Email not found')
+    }
+    return user;
 }
 
 module.exports = mongoose.model('User', userSchema);
