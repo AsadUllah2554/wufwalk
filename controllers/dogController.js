@@ -13,7 +13,7 @@ const User = require('../models/userModel')
           // Access the user's dogs array from the user object
           const userDogs = user.dogs;
       
-          res.status(200).json(user,userDogs);
+          res.status(200).json(userDogs);
         } catch (error) {
           res.status(500).json({ error: error.message });
         }
