@@ -1,12 +1,13 @@
 const User = require('../models/userModel')
 
+// getting dogs of a user
     const getDogs = async (req, res) => {
         const { userID } = req.params; // Assuming you are passing the username as a parameter
       
         try {
           // Find the user by username
         const user = await User.findById(userID);
-          console.log(user)
+    
           if (!user) {
             return res.status(404).json({ msg: "User not found" });
           }
@@ -45,10 +46,8 @@ const User = require('../models/userModel')
   }
 
     }
-  // Grab user ID and send new dog
-
-  // Delete Dog ID will be given delete that dog
-
+ 
+    // Delete dogs from Dogs Array
   const deleteDog = async (req, res) => {
     const { userID, dogID } = req.params;
 
@@ -77,6 +76,45 @@ const User = require('../models/userModel')
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+  }
+
+   // Updating dogs of a user 
+  const updateDogs = async (req, res) => {
+    const { userID, dogID } = req.params;
+    const updatedDogData = req.body; 
+
+    try {
+      // Find the user by their ID
+      const user = await User.findById(userId);
+  
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+  
+      // Find the dog to be updated by its ID in the user's dogs array
+      const dogToUpdate = user.dogs.find((dog) => dog._id.toString() === dogId);
+  
+      if (!dogToUpdate) {
+        return res.status(404).json({ message: 'Dog not found in user profile' });
+      }
+  
+      // Update the dog's information
+      if (updatedDogData.dogName) {
+        dogToUpdate.dogName = updatedDogData.dogName;
+      }
+      if (updatedDogData.image) {
+        dogToUpdate.image = updatedDogData.image;
+      }
+      // Add other fields as needed
+  
+      // Save the updated user profile with the dog's information updated
+      await user.save();
+  
+      res.status(200).json({ message: 'Dog updated successfully', user });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+
   }
       
 
