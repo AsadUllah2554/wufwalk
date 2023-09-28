@@ -15,13 +15,15 @@ const createToken = (_id) => {
    return jwt.sign({_id},process.env.SECRET_KEY,{expiresIn:'3d'})
 }
 
+// Login User function
 const loginUser = async (req, res) => {
 
   const { username, password } = req.body;
   try {
      const user = await User.login(username, password);
      const token = createToken(user._id);
-     res.status(200).json({username,token})
+     const id  = user._id;
+     res.status(200).json({id,username,token})
 
      
   }catch(error){
@@ -30,7 +32,7 @@ const loginUser = async (req, res) => {
   
 }
 
-   // signup User
+   // signup User function
    const signupUser = async (req, res) => {
         const { email, password,username,name,dogs } = req.body;
         console.log(dogs)
@@ -38,14 +40,16 @@ const loginUser = async (req, res) => {
    // Creating user in MongoDB
         try {
            const user = await User.signup(email, password,username,name,dogs);
+           const id = user._id;
            const token = createToken(user._id);
-           res.status(200).json({username,token})
+           res.status(200).json({id,username,token})
 
         }catch(error){
             res.status(400).json({error:error.message})
         } 
    }
 
+   // verify function to verify user and send OTP to email
    const verifyUser = async (req, res) => {
       const {email} = req.body;
       try {
@@ -61,6 +65,7 @@ const loginUser = async (req, res) => {
       res.status(400).json({ error: error.message });
    }}
 
+   // resetPasswordWithOTP function to reset password with OTP
     const resetPasswordWithOTP = async (req, res) => {
       const { email, newPassword } = req.body;
       
@@ -82,6 +87,7 @@ const loginUser = async (req, res) => {
 
     }
 
+    // sendOTPByEmail function to send OTP to email
     async function sendOTPByEmail(email, otp) {
       const transporter = nodemailer.createTransport({
         service: 'gmail',
@@ -101,8 +107,94 @@ const loginUser = async (req, res) => {
       await transporter.sendMail(mailOptions);
     }
 
+  // Get user profile
+  const getProfile = async (req, res) => {
+    const { userID } = req.params; // Assuming you pass the user's ID as a parameter
+  
+    try {
+      // Find the user by ID and select the fields you want to include in the response
+      const user = await User.findById(userID).select('name username email dogs');
+  
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+  
+      // Extract the user's dogs from the user object
+      const userDogs = user.dogs;
+  
+      // Prepare the profile data to send in the response
+      const userProfile = {
+        id: user._id,
+        name: user.name,
+        username: user.username,
+        email: user.email,
+        dogs: userDogs,
+       
+      };
+  
+      // Send the user's profile as a JSON response
+      res.status(200).json(userProfile);
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  }
 
-   module.exports = {loginUser , signupUser, verifyUser, resetPasswordWithOTP }
+   // Update Profile
+   const updateProfile = async (req, res) => {
+    const { userID } = req.params;
+    const updatedFields = req.body; 
+
+    try {
+      // Find the user by their ID
+      const user = await User.findById(userID);
+  
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+       // Check if the provided email and username already exist in other user documents
+    if (updatedFields.email) {
+      const existingEmailUser = await User.findOne({ email: updatedFields.email });
+      if (existingEmailUser && existingEmailUser._id.toString() !== userID) {
+        return res.status(400).json({ message: 'Email already exists' });
+      }
+    }
+    if (updatedFields.username) {
+      const existingUsernameUser = await User.findOne({ username: updatedFields.username });
+      if (existingUsernameUser && existingUsernameUser._id.toString() !== userID) {
+        return res.status(400).json({ message: 'Username already exists' });
+      }
+    }
+  
+      // Update specific fields in the user's profile
+      if (updatedFields.name) {
+        user.name = updatedFields.name;
+      }
+      if (updatedFields.email) {
+        user.email = updatedFields.email;
+      }
+
+      if (updatedFields.username) {
+        user.username = updatedFields.username;
+      }
+      if(updatedFields.dogs){
+        user.dogs = updatedFields.dogs;
+      }
+    
+      // Save the updated user profile
+      await user.save();
+  
+      res.status(200).json({ message: 'Profile updated successfully',user });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+
+   }
+
+   module.exports = {loginUser , signupUser, verifyUser, resetPasswordWithOTP
+  , getProfile, updateProfile
+  }
 
 //    {  
 //       "name":"Salman",

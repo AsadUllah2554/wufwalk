@@ -8,6 +8,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 // const workoutRoutes = require("./routes/workouts");
 const userRoutes = require("./routes/user");
+const dogRoutes = require("./routes/dog");
 
 const app = express();
 
@@ -41,6 +42,7 @@ app.get("/", cors(), (req, res) => {
 });
 
 // app.use("/api/workouts", workoutRoutes);
-app.use("/api/user", userRoutes);
+app.use("/api/user", userRoutes)
+app.use("/api/user", dogRoutes)
 
 //export default app;
